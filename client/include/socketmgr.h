@@ -30,3 +30,4 @@ int act_connect(char host[],unsigned int port) ;
 struct socket_host *  socket_add(int confd,int pid,int port);
 int forward_packet(struct socket_host * sock,void *buffer, size_t size);
 struct socket_host * socket_exist(int pid);
+void socket_delete(int pid);

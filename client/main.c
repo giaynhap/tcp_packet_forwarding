@@ -109,11 +109,11 @@ int act_close(int socketfd){
  
  
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
-  int conn;
-  int port ;
+int conn;
+int port ;
 void *handle_client(void *arg){
 
-    conn = act_connect("124.158.6.221",port);
+    conn = act_connect("0.0.0.0",port);
     char packet[13];
     char command = 100;
     size_t size = 0; 
@@ -125,15 +125,14 @@ void *handle_client(void *arg){
     char cache_buff[2048*2];
     int read_size = 0;
      while(1){
-        printf("==================\nwait read\n=================");
        size_t bytes = read(conn,buff,2048);
        if (bytes<=0){
-           printf("==================\nclose thead\n");
            break;
        }
 
         memcpy(cache_buff+read_size,buff,bytes);
         read_size+=bytes;
+        check_packet:
         if(read_size>=13){
             char command;
             size_t size;
@@ -149,47 +148,38 @@ void *handle_client(void *arg){
                 char *packet= malloc(size);
                 
                 if (size > 0){
-                      printf("==================\n prepare packet 1\n");
                     memcpy(packet,cache_buff+13,size);
-                  printf("==================\n prepare packet 2\n");
-                    forward_packet( socket_add(conn,sockid,2402),packet,size);
-                    
+                    forward_packet( socket_add(conn,sockid,2402),packet,size); 
                 }
                 else{
-                    printf("close socket \n");
                     struct socket_host * sock = socket_exist(sockid);
                     if (sock!=NULL){
                         if (sock->clientfd > 0){
                             closesocket(sock->clientfd);
                         }
                         sock->pid = 0;
+                        socket_delete(sock->pid);
                     }
                     free(packet);
                 }
-                 printf("==================\ndone 1\n");
                 read_size-=13+size;
                 if (read_size<0){
                     read_size = 0;
                 }
+                
                 memcpy(cache_buff,cache_buff+13+size,read_size);
-
+                if (read_size>13){
+                    goto check_packet;
+                }
             }
-
         }
-        
-
      }
-     
 }
  
  int main(int argc,char * argv[]){
-   
-
-   
    int tid;
    int test = 1;
    port =atoi(argv[1]);
- 
    handle_client(NULL);
  }
 
