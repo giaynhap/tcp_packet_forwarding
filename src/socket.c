@@ -157,8 +157,11 @@ void *handle_conn_client(void *arg){
     client_t *cli = (client_t *)arg;
  
     while ((rlen = read(cli->connfd, buff_in, sizeof(buff_in) )) > 0) {
-         printf("rev packet from client %d - size :%ld \n",cli->connfd,rlen);
-         forward_packet_host(1,cli,buff_in,rlen);
+        printf("rev packet from client %d - size :%ld \n",cli->connfd,rlen);
+        if  (forward_packet_host(1,cli,buff_in,rlen)<0){
+            close(cli->parent->connfd);
+            return NULL;
+        }
         
     }
     forward_packet_host(0,cli,NULL,0);
